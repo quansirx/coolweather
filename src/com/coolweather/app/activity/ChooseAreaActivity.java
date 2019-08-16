@@ -6,16 +6,18 @@ import java.util.List;
 import com.coolweather.app.util.HttpCallbackListener;
 import com.coolweather.app.util.HttpUtil;
 import com.coolweather.app.util.Utility;
-
 import com.coolweather.app.R;
-
 import com.coolweather.app.model.City;
 import com.coolweather.app.model.County;
 import com.coolweather.app.model.Province;
 import com.coolweather.app.db.CoolWeatherDB;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.*;
 import android.view.View.*;
@@ -44,8 +46,17 @@ public class ChooseAreaActivity extends Activity {
 	
 	private int currentLevel;
 	
+	private boolean isFromWeatherActivity;
+	
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState);
+		isFromWeatherActivity=getIntent().getBooleanExtra("from_weather_activity", false);
+		SharedPreferences prefs=PreferenceManager.getDefaultSharedPreferences(this);
+		if(prefs.getBoolean("city_selected", false)&&!isFromWeatherActivity){
+			startActivity(new Intent(this,WeatherActivity.class));
+			finish();
+			return;
+		}
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.choose_area);
 		listView=(ListView)findViewById(R.id.list_view);
@@ -64,6 +75,12 @@ public class ChooseAreaActivity extends Activity {
 				}else if(currentLevel==LEVEL_CITY){
 					selectedCity=cityList.get(index);
 					queryCounties();
+				}else if(currentLevel==LEVEL_COUNTY){
+					String countyCode=countyList.get(index).getCountyCode();
+					Intent intent=new Intent(ChooseAreaActivity.this,WeatherActivity.class);
+					intent.putExtra("county_code", countyCode);
+					startActivity(intent);
+					finish();
 				}
 			}
 		});
@@ -179,6 +196,11 @@ public class ChooseAreaActivity extends Activity {
 				queryProvinces();
 			}
 			else {
+				if(isFromWeatherActivity){
+					Intent intent =new Intent(this,WeatherActivity.class);
+					startActivity(intent);
+					
+				}
 				finish();
 			}
 		}
